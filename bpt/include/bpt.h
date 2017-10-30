@@ -26,6 +26,9 @@
 #define MIN_ORDER 3
 #define MAX_ORDER 20
 
+// Size of each page
+#define PAGE_SIZE 4096
+
 // Constants for printing part or all of the GPL license.
 #define LICENSE_FILE "LICENSE.txt"
 #define LICENSE_WARRANTEE 0
@@ -48,7 +51,7 @@
  * of the value field.
  */
 typedef struct record {
-    int64_t value;
+    int64_t key;
 	char value[120];
 } record;
 
@@ -144,6 +147,7 @@ int find_range( node * root, int key_start, int key_end, bool verbose,
         int returned_keys[], void * returned_pointers[]); 
 node * find_leaf( node * root, int key, bool verbose );
 record * find( node * root, int key, bool verbose );
+//char * find ( int key ); 
 int cut( int length );
 
 // Insertion.
@@ -163,7 +167,7 @@ node * insert_into_node_after_splitting(node * root, node * parent,
 node * insert_into_parent(node * root, node * left, int key, node * right);
 node * insert_into_new_root(node * left, int key, node * right);
 node * start_new_tree(int key, record * pointer);
-int insert( int key, char * value );
+node * insert( node * root, int key, int value );
 
 // Deletion.
 

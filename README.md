@@ -1,2 +1,8 @@
-# proj2_reset
-restart proj 2
+10:30 02:45 Merge branch 'master' of https://github.com/jasperkim/proj2_reset
+
+# 왜 이 병합이 필요한지를 설명하는 커밋 메시지를 입력하십시오. 특히
+# 업스트림 업데이트를 어떤 목적용 브랜치로 병합할 때는 반드시 그렇게
+# 하십시오.
+#
+# '#' 문자로 시작하는 줄은 무시되고, 메시지가 비어 있으면 커밋을
+# 중지합니다.

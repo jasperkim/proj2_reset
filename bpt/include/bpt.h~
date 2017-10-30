@@ -4,6 +4,7 @@
 // Uncomment the line below if you are compiling on Windows.
 // #define WINDOWS
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -47,12 +48,12 @@
  * of the value field.
  */
 typedef struct record {
-    int value;
-//	char value[120];
+    int64_t key;
+	char value[120];
 } record;
 
 typedef struct internal_record{
-	long int key;
+	int64_t key;
 	long unsigned int page_offset;
 } internal_record;
 /* Type representing a node in the B+ tree.
@@ -143,6 +144,7 @@ int find_range( node * root, int key_start, int key_end, bool verbose,
         int returned_keys[], void * returned_pointers[]); 
 node * find_leaf( node * root, int key, bool verbose );
 record * find( node * root, int key, bool verbose );
+//char * find ( int key ); 
 int cut( int length );
 
 // Insertion.

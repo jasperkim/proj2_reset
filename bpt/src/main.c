@@ -12,6 +12,8 @@ int main( int argc, char ** argv ) {
 	char *recval_str;
     FILE * fp;
     node * root;
+	header_page headerpage;
+	general_page in_use_page;
     int input, range2;
     char instruction;
     char license_part;
@@ -53,18 +55,19 @@ int main( int argc, char ** argv ) {
         print_tree(root);
     }
 
-	printf("size of Header_page :%d\n size of General_page :%d\n size of Page_header :%d\n", 
+	printf("size of Header_page :%d\nsize of General_page :%d\nsize of Page_header :%d\n", 
 		sizeof(HP), sizeof(GP), sizeof(PH));
 
     printf("> ");
     while (scanf("%c", &instruction) != EOF) {
         switch (instruction) {
 		case 'o':
-			getchar();
-			fgets(newfile, sizeof(newfile), stdin);	// remodify
-			newfile[strlen(newfile)-1]='\0';
-			newfile_str=newfile;
-			db_file = open_db(newfile_str);	//CREATED
+			scanf("%s", newfile);
+//			getchar();
+//			fgets(newfile, sizeof(newfile), stdin);	// remodify
+//			newfile[strlen(newfile)-1]='\0';
+//			newfile_str=newfile;
+			db_file = open_db(newfile);	//CREATED
 			if(db_file==0)
 				printf("Open_db succeeded\n");
 			break;
@@ -79,11 +82,16 @@ int main( int argc, char ** argv ) {
 			fgets(record_value, sizeof(record_value), stdin);
 			record_value[strlen(record_value)-1]='\0';
 			recval_str = record_value;
-			insertion_check = insert(input, recval_str); // prototype insert
+//			insertion_check = insert(input, recval_str); // prototype insert
 														 // int insert (int key, char * value);
 //			print_tree(root); 	// modify
             break;
+
+
         case 'f':
+			break;
+
+
         case 'p':
             scanf("%d", &input);
             find_and_print(root, input, instruction == 'p');

@@ -7,14 +7,14 @@
 #include "bpt.h"
 
 typedef struct header_page {	// only for header_page
-	long unsigned int free_page_offset;
-	long unsigned int root_page_offset;
-	long unsigned int number_of_pages;
+	long unsigned int free_page_offset[1];
+	long unsigned int root_page_offset[1];
+	long unsigned int number_of_pages[1];
 	char reserved[4072];
 } header_page;
 
 typedef struct page_header {
-	long unsigned int parent_page_offset;
+	long unsigned int parent_page_offset[1];
 	int is_leaf;
 	int num_of_keys;
 	char reserved[104];

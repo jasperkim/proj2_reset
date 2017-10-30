@@ -84,6 +84,11 @@ node * queue = NULL;
 bool verbose_output = false;
 
 
+/* Using pages as global structure
+
+*/
+header_page headerpage;
+general_page generalpage;
 // FUNCTION DEFINITIONS.
 
 // OUTPUT AND UTILITIES
@@ -184,41 +189,50 @@ void usage_3( void ) {
 	int open_db (char *pathname);	from the main.c, ( newfile_str == pathname )
 */
 int open_db (char *pathname) {
-	int fd;
-	header_page headerpage;
-	long int free_page_offset_buffer[1];
-	long int root_page_offset_buffer[1];
-	long int number_of_pages_buffer[1];
+	int fd, a, b, c;
+//	header_page headerpage;
+//	long int free_page_offset_buffer[1];
+//	long int root_page_offset_buffer[1];
+//	long int number_of_pages_buffer[1];
 	long int init_offset_buffer[1]={0};
 	long int init_number_of_pages[1]={1};
-	if(!( ( fd=open(pathname, O_RDWR) ) == -1) ){
+	if(( fd=open(pathname, O_RDWR) ) >= 0 ){
 		printf("File already exists and is now opened.\n");
 	}
 	else {
-		if ((fd=open(pathname, O_CREAT|O_EXCL|O_RDWR, 0554))==-1) {
-			perror("File didn't exiest. Failure creating a file.\n");
+		printf("%d\n", fd);
+		if ((fd=open(pathname, O_CREAT|O_EXCL|O_RDWR, 0777))==-1) {
+			perror("File already exists. Failure creating a file.\n");
 			exit(EXIT_FAILURE);
 		}
 		else{
+//			printf("before calloc %d\n", sizeof(headerpage));
 			printf("File is created and is now opened.\n");
-			if(pwrite(fd, init_offset_buffer, sizeof(headerpage.free_page_offset), 0)==-1)
+//			headerpage = (*header_page)calloc(1, sizeof(PAGE_SIZE));
+//			printf("after calloc %d\n", sizeof(headerpage));
+			if(pwrite(fd, headerpage.free_page_offset, sizeof(headerpage.free_page_offset), 0)==-1)
 				perror("Failed to init header_page -> free_page_offset.\n");
-			if(pwrite(fd, init_offset_buffer, sizeof(headerpage.root_page_offset), 8)==-1)
+			if(pwrite(fd, headerpage.root_page_offset, sizeof(headerpage.root_page_offset), 8)==-1)
 				perror("Failed to init header_page -> root_page_offset.\n");
-			if(pwrite(fd, init_number_of_pages, sizeof(headerpage.number_of_pages), 16)==-1)
+			if(pwrite(fd, headerpage.number_of_pages, sizeof(headerpage.number_of_pages), 16)==-1)
 				perror("Failed to init header_page -> number_of_pages.\n");
+			if(pwrite(fd, headerpage.reserved, sizeof(headerpage.reserved), 24)==-1)
+				perror("Failed to achieve reserved space header_page -> reserved[4072]\n");
 		}
 	}
 // from here, we read the header_page
-	if(pread(fd, free_page_offset_buffer, sizeof(headerpage.free_page_offset), 0)==-1)
+	if((a=pread(fd, headerpage.free_page_offset, sizeof(headerpage.free_page_offset), 0))==-1)
 		perror("Failed to read header_page -> free_page_offset.\n");
-	if(pread(fd, root_page_offset_buffer, sizeof(headerpage.root_page_offset), 8)==-1)
+	if((b=pread(fd, headerpage.root_page_offset, sizeof(headerpage.root_page_offset), 8))==-1)
 		perror("Failed to read header_page -> root_page_offset.\n");
-	if(pread(fd, number_of_pages_buffer, sizeof(headerpage.number_of_pages), 16)==-1)
+	if((c=pread(fd, headerpage.number_of_pages, sizeof(headerpage.number_of_pages), 16))==-1)
 		perror("Failed to read header_page -> number_of_pages.\n");
 
 //	printf("Unntil now, file creation or opening succeeded.\n");
-	return fd;
+	if((a!=-1)&&(b!=-1)&&(c!=-1))	// when reading all
+		return 0;
+	else
+		return -1;
 }
 
 /* Helper function for printing the
@@ -467,6 +481,11 @@ node * find_leaf( node * root, int key, bool verbose ) {
     return c;
 }
 
+//char * find ( int key ) {
+//	int64_t offset;
+//	int number_of_pages;
+	
+
 
 /* Finds and returns the record to which
  * a key refers.
@@ -474,9 +493,12 @@ node * find_leaf( node * root, int key, bool verbose ) {
 record * find( node * root, int key, bool verbose ) {
     int i = 0;
     node * c = find_leaf( root, key, verbose );
-    if (c == NULL) return NULL;
+    if (c == NULL) 
+		return NULL;
     for (i = 0; i < c->num_keys; i++)
-        if (c->keys[i] == key) break;
+        if (c->keys[i] == key) 
+			break;
+
     if (i == c->num_keys) 
         return NULL;
     else
@@ -506,7 +528,7 @@ record * make_record(int value) {
         exit(EXIT_FAILURE);
     }
     else {
-        new_record->value = value;
+        *(new_record->value) = value;
     }
     return new_record;
 }

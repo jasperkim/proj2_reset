@@ -13,11 +13,6 @@ typedef struct header_page {	// only for header_page
 	char reserved[4072];
 } header_page;
 
-typedef struct general_page {
-	page_header page_header;
-	pagetype pagetype;
-} general_page
-	
 typedef struct page_header {
 	long unsigned int parent_page_offset;
 	int is_leaf;
@@ -30,5 +25,12 @@ typedef union pagetype {
 	record record[31];
 	internal_record internal_record[248];
 } pagetype;
+
+typedef struct general_page {
+	page_header page_header;
+	pagetype pagetype;
+} general_page;
+	
+
 	
 

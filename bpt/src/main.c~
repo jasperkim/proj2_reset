@@ -4,7 +4,7 @@
 
 int main( int argc, char ** argv ) {
 
-	int db_file;
+	int db_file, insertion_check;
     char * input_file;
 	char newfile[100];
 	char record_value[120];
@@ -12,6 +12,8 @@ int main( int argc, char ** argv ) {
 	char *recval_str;
     FILE * fp;
     node * root;
+	header_page headerpage;
+	general_page in_use_page;
     int input, range2;
     char instruction;
     char license_part;
@@ -53,7 +55,7 @@ int main( int argc, char ** argv ) {
         print_tree(root);
     }
 
-	printf("size of Header_page :%d\n size of General_page :%d\n size of Page_header :%d\n", 
+	printf("size of Header_page :%d\nsize of General_page :%d\nsize of Page_header :%d\n", 
 		sizeof(HP), sizeof(GP), sizeof(PH));
 
     printf("> ");
@@ -75,10 +77,20 @@ int main( int argc, char ** argv ) {
             break;
         case 'i':
             scanf("%d", &input);
-            root = insert(root, input, input);
-            print_tree(root);
+			getchar();
+			fgets(record_value, sizeof(record_value), stdin);
+			record_value[strlen(record_value)-1]='\0';
+			recval_str = record_value;
+//			insertion_check = insert(input, recval_str); // prototype insert
+														 // int insert (int key, char * value);
+//			print_tree(root); 	// modify
             break;
+
+
         case 'f':
+			break;
+
+
         case 'p':
             scanf("%d", &input);
             find_and_print(root, input, instruction == 'p');
