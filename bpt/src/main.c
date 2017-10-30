@@ -93,8 +93,8 @@ int main( int argc, char ** argv ) {
 
 
         case 'p':
-            scanf("%d", &input);
-            find_and_print(root, input, instruction == 'p');
+//            scanf("%d", &input);
+//            find_and_print(root, input, instruction == 'p');
             break;
         case 'r':
             scanf("%d %d", &input, &range2);

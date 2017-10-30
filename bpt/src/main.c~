@@ -62,11 +62,12 @@ int main( int argc, char ** argv ) {
     while (scanf("%c", &instruction) != EOF) {
         switch (instruction) {
 		case 'o':
-			getchar();
-			fgets(newfile, sizeof(newfile), stdin);	// remodify
-			newfile[strlen(newfile)-1]='\0';
-			newfile_str=newfile;
-			db_file = open_db(newfile_str);	//CREATED
+			scanf("%s", newfile);
+//			getchar();
+//			fgets(newfile, sizeof(newfile), stdin);	// remodify
+//			newfile[strlen(newfile)-1]='\0';
+//			newfile_str=newfile;
+			db_file = open_db(newfile);	//CREATED
 			if(db_file==0)
 				printf("Open_db succeeded\n");
 			break;
@@ -92,8 +93,8 @@ int main( int argc, char ** argv ) {
 
 
         case 'p':
-            scanf("%d", &input);
-            find_and_print(root, input, instruction == 'p');
+//            scanf("%d", &input);
+//            find_and_print(root, input, instruction == 'p');
             break;
         case 'r':
             scanf("%d %d", &input, &range2);

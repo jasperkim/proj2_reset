@@ -14,11 +14,11 @@ typedef struct header_page {	// only for header_page
 } header_page;
 
 typedef struct page_header {
-	long unsigned int parent_page_offset[1];
-	int is_leaf;
-	int num_of_keys;
+	int64_t parent_page_offset[1];
+	int is_leaf[1];
+	int num_of_keys[1];
 	char reserved[104];
-	long unsigned int next_page_offset;
+	int64_t next_page_offset[1];
 } page_header;
 
 typedef union pagetype {
@@ -30,6 +30,21 @@ typedef struct general_page {
 	page_header page_header;
 	pagetype pagetype;
 } general_page;
+
+typedef struct find_general_page {
+	page_header find_page_header;
+	pagetype find_pagetype;
+} find_general_page;  // use this find_general_page to find page
+
+//
+/* Using pages as global structure
+
+*/
+//header_page headerpage;
+//general_page generalpage;
+//find_general_page find_generalpage;
+
+
 	
 
 	

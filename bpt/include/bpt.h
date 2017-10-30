@@ -146,8 +146,8 @@ void find_and_print_range(node * root, int range1, int range2, bool verbose);
 int find_range( node * root, int key_start, int key_end, bool verbose,
         int returned_keys[], void * returned_pointers[]); 
 node * find_leaf( node * root, int key, bool verbose );
-record * find( node * root, int key, bool verbose );
-//char * find ( int key ); 
+//record * find( node * root, int key, bool verbose );
+char * find ( int key ); 
 int cut( int length );
 
 // Insertion.

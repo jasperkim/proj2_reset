@@ -57,6 +57,11 @@
 
 // GLOBALS.
 
+/* Declare fd as global variable.
+*/
+
+int fd=0;
+
 /* The order determines the maximum and minimum
  * number of entries (keys and pointers) in any
  * node.  Every node has at most order - 1 keys and
@@ -89,6 +94,7 @@ bool verbose_output = false;
 */
 header_page headerpage;
 general_page generalpage;
+find_general_page find_generalpage;
 // FUNCTION DEFINITIONS.
 
 // OUTPUT AND UTILITIES
@@ -189,7 +195,7 @@ void usage_3( void ) {
 	int open_db (char *pathname);	from the main.c, ( newfile_str == pathname )
 */
 int open_db (char *pathname) {
-	int fd, a, b, c;
+	int a, b, c;
 //	header_page headerpage;
 //	long int free_page_offset_buffer[1];
 //	long int root_page_offset_buffer[1];
@@ -210,11 +216,11 @@ int open_db (char *pathname) {
 			printf("File is created and is now opened.\n");
 //			headerpage = (*header_page)calloc(1, sizeof(PAGE_SIZE));
 //			printf("after calloc %d\n", sizeof(headerpage));
-			if(pwrite(fd, headerpage.free_page_offset, sizeof(headerpage.free_page_offset), 0)==-1)
+			if(pwrite(fd, init_offset_buffer, sizeof(headerpage.free_page_offset), 0)==-1)
 				perror("Failed to init header_page -> free_page_offset.\n");
-			if(pwrite(fd, headerpage.root_page_offset, sizeof(headerpage.root_page_offset), 8)==-1)
+			if(pwrite(fd, init_offset_buffer, sizeof(headerpage.root_page_offset), 8)==-1)
 				perror("Failed to init header_page -> root_page_offset.\n");
-			if(pwrite(fd, headerpage.number_of_pages, sizeof(headerpage.number_of_pages), 16)==-1)
+			if(pwrite(fd, init_number_of_pages, sizeof(headerpage.number_of_pages), 16)==-1)
 				perror("Failed to init header_page -> number_of_pages.\n");
 			if(pwrite(fd, headerpage.reserved, sizeof(headerpage.reserved), 24)==-1)
 				perror("Failed to achieve reserved space header_page -> reserved[4072]\n");
@@ -228,7 +234,8 @@ int open_db (char *pathname) {
 	if((c=pread(fd, headerpage.number_of_pages, sizeof(headerpage.number_of_pages), 16))==-1)
 		perror("Failed to read header_page -> number_of_pages.\n");
 
-//	printf("Unntil now, file creation or opening succeeded.\n");
+	printf("Unntil now, file creation or opening succeeded.\n");
+	printf("File descriptor value : %d\n", fd);
 	if((a!=-1)&&(b!=-1)&&(c!=-1))	// when reading all
 		return 0;
 	else
@@ -383,14 +390,14 @@ void print_tree( node * root ) {
 /* Finds the record under a given key and prints an
  * appropriate message to stdout.
  */
-void find_and_print(node * root, int key, bool verbose) {
-    record * r = find(root, key, verbose);
-    if (r == NULL)
-        printf("Record not found under key %d.\n", key);
-    else 
-        printf("Record at %lx -- key %d, value %d.\n",
-                (unsigned long)r, key, r->value);
-}
+//void find_and_print(node * root, int key, bool verbose) {
+//    record * r = find(root, key, verbose);
+//    if (r == NULL)
+//        printf("Record not found under key %d.\n", key);
+//    else 
+//        printf("Record at %lx -- key %d, value %d.\n",
+//                (unsigned long)r, key, r->value);
+//}
 
 
 /* Finds and prints the keys, pointers, and values within a range
@@ -481,16 +488,140 @@ node * find_leaf( node * root, int key, bool verbose ) {
     return c;
 }
 
-//char * find ( int key ) {
-//	int64_t offset;
-//	int number_of_pages;
+off_t find_root_page(void) {
+
+	off_t root_page_offset;
+	root_page_offset = headerpage.root_page_offset[1];
+	if(root_page_offset == 0) {
+		printf("The tree is empty!\n");
+		return 0; }
+	else
+		return root_page_offset;
+
+}
+
+
+// helper function, copying to the find_generalpage.
+// When successfully copied, return 0, else -1.
+int copy_to_find_general_page (int64_t page_address) {
+
+	printf("Starting from page_address, copy data to find_generalpage.\n");
+
+	if(pread(fd, (find_generalpage.find_page_header.parent_page_offset), 
+		sizeof(int64_t), page_address)==-1) {
+		printf("find_generalpage -> find_page_header -> parent_page_offset ERROR.\n");
+		return -1; }
+
+	if(pread(fd, (find_generalpage.find_page_header.is_leaf), 
+		sizeof(int), (page_address + 8))==-1) {
+		printf("find_generalpage -> find_page_header -> is_leaf ERROR.\n");
+		return -1; }
+
+	if(pread(fd, (find_generalpage.find_page_header.num_of_keys), 
+		sizeof(int), (page_address + 12))==-1) {
+		printf("find_generalpage -> find_page_header -> #pages ERROR.\n");
+		return -1; }
+
+	if(pread(fd, (find_generalpage.find_page_header.reserved), 
+		sizeof(104), (page_address + 16))==-1) {
+		printf("find_generalpage -> find_page_header -> reserved ERROR.\n");
+		return -1; }
+
+	if(pread(fd, (find_generalpage.find_page_header.next_page_offset), 
+		sizeof(int64_t), page_address + 120)==-1) {
+		printf("find_generalpage -> find_page_header -> next_page_offset ERROR.\n");
+		return -1; }
+
+	printf("UNTIL NOW, PAGE_HEADER IS COPIED TO FIND_PAGE_HEADER.\n");
+
+	if(find_generalpage.find_page_header.is_leaf[0]==1)	{		// if it is leaf_page
+		if(pread(fd, (find_generalpage.find_pagetype.record), 
+				sizeof(3968), page_address + 128)==-1) {
+			printf("Leaf data copy ERROR.\n");
+			return -1; }
+		else return 0;
+	}
+	else if(find_generalpage.find_page_header.is_leaf[0]==0) {	// if it is internal_page
+		if(pread(fd, (find_generalpage.find_pagetype.internal_record), 
+				sizeof(3968), page_address + 128)==-1) {
+			printf("Internal data copy ERROR.\n");
+			return -1; }
+		else
+			return 0;
+	}
+	return -1;
+}
+
+char * find_leaf_page_key (off_t leaf_page_offset, int key) {
+	
+	int i;
+	char * value;
+	if(copy_to_find_general_page(leaf_page_offset)==-1)
+		printf("FIND LEAF PAGE KEY COPY ERROR.\n");
+	// find_general page == leaf_page
+	printf("Leaf page is copied to Find_General_Page.\n");	
+	i = 0;
+	while( (i<find_generalpage.find_page_header.num_of_keys[0]) && 
+			(key<find_generalpage.find_pagetype.record[i].key)) {
+		i++; }
+	value = find_generalpage.find_pagetype.record[i].value;
+	if(value != NULL)
+		return value;
+	if(value == NULL && i<find_generalpage.find_page_header.num_of_keys[0]) {	
+													// when leaf page is found, but key doesn't exist
+		printf("Leaf page is found, but key doesn't exist.\n");
+		return NULL; }
+	else if(value == NULL && i>=find_generalpage.find_page_header.num_of_keys[0]) {
+		return find_leaf_page_key (find_generalpage.find_page_header.next_page_offset[0], key);
+		// right sibling is copied and then found recursively.
+	}
+}
+
+char * find ( int key ) {
+	
+	off_t root_page_offset;
+	off_t internal_page_offset;
+	off_t leaf_page_offset;
+	int i;
+	root_page_offset = find_root_page();
+	if (root_page_offset == 0){
+		printf("ROOT IS EMPTY.\n");
+		return NULL; }
+	else { // we found the root page
+		lseek(fd, root_page_offset, 0);
+		if(copy_to_find_general_page(root_page_offset)==-1)
+			printf("DATA COPY ERROR FOR ROOT PAGE.\n");		
+		printf("Now, all root_page data is copied to find_general_page.\n");
+	}
+	while ( !(find_generalpage.find_page_header.is_leaf[0]) ) {
+		if(!(find_generalpage.find_page_header.is_leaf[0]) && (key<find_generalpage.find_pagetype.record[0].key))
+			internal_page_offset = find_generalpage.find_page_header.next_page_offset[0];
+		else{
+			int i = 0;
+			while(i<find_generalpage.find_page_header.num_of_keys[0]) {
+				if (key >= find_generalpage.find_pagetype.internal_record[i].key)
+					i++;
+				else
+					break;
+			}
+			internal_page_offset = find_generalpage.find_pagetype.internal_record[i].page_offset;
+			if( copy_to_find_general_page(internal_page_offset) == -1)
+				printf("DATA COPY ERROR WHILE FOR INTERNAL PAGE.\n");
+			if(find_generalpage.find_page_header.is_leaf[0])
+				leaf_page_offset = internal_page_offset;
+		}
+	}
+	printf("Now, the leaf_page data is copied to find_general_page.\n");
+	
+	return find_leaf_page_key(leaf_page_offset ,key);
+}
 	
 
 
 /* Finds and returns the record to which
  * a key refers.
  */
-record * find( node * root, int key, bool verbose ) {
+/*record * find( node * root, int key, bool verbose ) {
     int i = 0;
     node * c = find_leaf( root, key, verbose );
     if (c == NULL) 
@@ -504,7 +635,7 @@ record * find( node * root, int key, bool verbose ) {
     else
         return (record *)c->pointers[i];
 }
-
+*/
 /* Finds the appropriate place to
  * split a node that is too big into two.
  */
@@ -872,7 +1003,7 @@ node * insert( node * root, int key, int value ) {
      * duplicates.
      */
 
-    if (find(root, key, false) != NULL)
+    if (find(key) != NULL)
         return root;
 
     /* Create a new record for the
@@ -1266,7 +1397,7 @@ node * delete(node * root, int key) {
     node * key_leaf;
     record * key_record;
 
-    key_record = find(root, key, false);
+    key_record = find( key);
     key_leaf = find_leaf(root, key, false);
     if (key_record != NULL && key_leaf != NULL) {
         root = delete_entry(root, key_leaf, key, key_record);
