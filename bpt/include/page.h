@@ -30,22 +30,3 @@ typedef struct general_page {
 	page_header page_header;
 	pagetype pagetype;
 } general_page;
-
-typedef struct find_general_page {
-	page_header find_page_header;
-	pagetype find_pagetype;
-} find_general_page;  // use this find_general_page to find page
-
-//
-/* Using pages as global structure
-
-*/
-//header_page headerpage;
-//general_page generalpage;
-//find_general_page find_generalpage;
-
-
-	
-
-	
-
